@@ -1,0 +1,12 @@
+
+
+# junk
+.DS_Store
+.bak
+
+# debug
+*.log
+*.stackdump
+
+# artifacts
+/vectorprog
