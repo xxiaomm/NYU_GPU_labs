@@ -3,16 +3,6 @@
 NYU GPU Lab 1: Implement a vector processor in CUDA.
 
 
-### Switch Modules on CIMS Machines
-```bash
-- login cims server:
-  - ssh xm2074@access.cims.nyu.edu (V7?HF@My)
-  - upload file: scp -r /Users/xiao/Desktop/A_GPU_22Spring/labs/lab1/xm2074.cu 
-    xm2074@access.cims.nyu.edu:~/gpu/lab1
-- ssh to cuda1, cuda2, cuda3, cuda4, or cuda5(prefer)
-- 
-```
-
 ### Module load and Build
 
 ```bash
@@ -27,7 +17,7 @@ An executable named `vectorprog` will be generated under the project root direct
 ./vectorprog <vector_size>
 ```
 
-## #Change Number of Blocks & Threads
+### Change Number of Blocks & Threads
 
 Open `.cu` file and change the `BLOCK_NUM` and `THREADS_NUM` macros.
 
