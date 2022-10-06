@@ -1,23 +1,15 @@
 /*
  * ssh xm2074@access.cims.nyu.edu
  * pwd: V7?HF@My
- * 
  * scp -r /Users/xiao/Desktop/A_GPU_22Spring/labs/lab1/xm2074.cu xm2074@access.cims.nyu.edu:~/gpu/lab1
- * 
  * module load cuda-10.2  (from cuda-9.0 and higher is OK)
- * If  you want to see sample code, then execute the following steps:
- * cp -r $CUDA_HOME/samples ~/cuda_samples
- * cd ~/cuda_samples
- * make
- * 
  * nvcc -o vectorprog xm2074.cu -lm
  */
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <cuda.h>
+#include<time.h>
 
 #define BLOCK_NUM 8			// grid size			
 #define THREADS_NUM 500		// block size
@@ -37,7 +29,8 @@ int main(int argc, char *argv[]){
 	float *a, *b, *c; // The arrays that will be processed in the host.
 	float *temp;  //array in host used in the sequential code.
 	float *ad, *bd, *cd; //The arrays that will be processed in the device.
-	clock_t start, end; // to meaure the time taken by a specific part of code
+	// clock_t start, end; // to meaure the time taken by a specific part of code
+	struct timespec start, end;
 	
 	if(argc != 2){
 		printf("usage:  ./vectorprog n\n");
@@ -85,11 +78,17 @@ int main(int argc, char *argv[]){
 	}
 	
     //The sequential part
-	start = clock();
+	// start = clock();
+	clock_gettime(CLOCK_REALTIME, &start);
+
 	for(i = 0; i < n; i++)
 		temp[i] += a[i] * b[i];
-	end = clock();
-	printf("Total time taken by the sequential part = %10lf\n", (double)(end - start) / CLOCKS_PER_SEC);
+	// end = clock();
+	clock_gettime(CLOCK_REALTIME, &end);
+	
+	
+	printf("Total time taken by the sequential part = %lf\n", (double)(end.tv_nsec - start.tv_nsec));
+	// printf("Total time taken by the sequential part = %lf\n", (time->tv_nsec));
 
     /******************  The start GPU part: Do not modify anything in main() above this line  ************/
 	//The GPU part
@@ -111,30 +110,32 @@ int main(int argc, char *argv[]){
 	cudaMalloc((void **)&bd, size);
 	cudaMalloc((void **)&cd, size);
 
-
+	
 	// 2. send a, b, and c to the device
 	cudaMemcpy(ad, a, size, cudaMemcpyHostToDevice);
 	cudaMemcpy(bd, b, size, cudaMemcpyHostToDevice);
 	cudaMemcpy(cd, c, size, cudaMemcpyHostToDevice);
 
+	// start = clock();
+	clock_gettime(CLOCK_REALTIME, &start);
 
-	start = clock();
-
+	
 	// 4. call the kernel function
 	int threads = ceil(n / (float)(BLOCK_NUM * THREADS_NUM));
 	vecGPU<<<BLOCK_NUM, THREADS_NUM>>>(ad, bd, cd, n, threads);
 	
-	end = clock();
-	
+	// end = clock();
+	clock_gettime(CLOCK_REALTIME, &end);
+
 	// 5. bring the cd array back from the device and store it in c array
 	cudaMemcpy(c, cd, size, cudaMemcpyDeviceToHost);
-
+	// V7?HF@My
 	// 6. free ad, bd, and cd
 	cudaFree(ad);
 	cudaFree(bd);
 	cudaFree(cd);
-	
-	printf("Total time taken by the GPU part = %10lf\n", (double)(end - start) / CLOCKS_PER_SEC);
+	// end = clock();
+	printf("Total time taken by the GPU part = %lf\n",(double)(end.tv_nsec - start.tv_nsec));
 	/******************  The end of the GPU part: Do not modify anything in main() below this line  ************/
 	
 	//checking the correctness of the GPU part
@@ -165,4 +166,3 @@ __global__ void vecGPU(float *ad, float *bd, float *cd, int n, int threads)
 		cur++;
 	}
 }
-// pwd: V7?HF@My
