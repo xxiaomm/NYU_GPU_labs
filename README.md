@@ -1,4 +1,4 @@
-# nyu_GPU_labs
+## NYU_GPU_labs
 
 
 NYU GPU Lab 1: Implement a vector processor in CUDA.
