@@ -1,6 +1,6 @@
 ## lab1
 
-NYU GPU Lab 1: Implement a vector processor in CUDA.
+NYU GPU Lab 1: Write a program to process vectors in CUDA.
 
 
 ### Module load and Build

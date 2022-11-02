@@ -1,7 +1,7 @@
 ## NYU_GPU_labs
 
 
-NYU GPU Lab 1: Implement a vector processor in CUDA.
+NYU GPU Lab 1: Write a program to process vectors in CUDA.
 
 
 NYU GPU Lab 2: Write CUDA program to determine the heat distribution in a space using synchronous
