@@ -108,30 +108,6 @@ int main(int argc, char * argv[])
 }
 
 
-/*
-[xm2074@cuda5 lab2]$ ./heatdist 1000 50000 0
-CPU sequential version:
-Time taken = 428.690000
-[xm2074@cuda5 lab2]$ ./heatdist 2000 50000 0
-CPU sequential version:
-Time taken = 1865.030000
-[xm2074@cuda5 lab2]$ ./heatdist 4000 50000 0
-CPU sequential version:
-Time taken = 7857.240000
-
-[xl3725@cuda1 gpu_lab2]$ ./heatdist 2000 50000 0 
-CPU sequential version:
-Time taken = 1691.670000
-[xl3725@cuda1 gpu_lab2]$ ./heatdist 4000 50000 0 
-CPU sequential version:
-Time taken = 7867.100000
-
-[xl3725@cuda1 gpu_lab2]$ ./heatdist 8000 50000 0
-CPU sequential version:
-Time taken = 29353.160000
-
-
-*/
 /*****************  The CPU sequential version (DO NOT CHANGE THAT) **************/
 void  seq_heat_dist(float * playground, unsigned int N, unsigned int iterations)
 {
@@ -189,45 +165,11 @@ __global__ void gpu_kernel(float* playground, float* temp, unsigned int N, int s
                                 + playground[index(row, col+1, N)]) / 4.0;
 
     playground[index(row, col, N)] = temp[index(row, col, N)];
-    printf("a+j\n");
+    // printf("a+j\n");
   }
 }
 
-/*
-nvcc -o heatdist heatdist.cu
-nvcc -o xm2074 xm2074.cu
-[xm2074@cuda5 lab2]$ ./heatdist 1000 100000 1
-GPU version:
-Time taken = 7.220000
-[xm2074@cuda5 lab2]$ ./heatdist 2000 100000 1
-GPU version:
-Time taken = 23.940000
-[xm2074@cuda5 lab2]$ ./heatdist 4000 100000 1
-GPU version:
-Time taken = 90.600000
-[xm2074@cuda5 lab2]$ ./heatdist 8000 100000 1
-GPU version:
-Time taken = 281.330000
-[xm2074@cuda5 lab2]$ ./heatdist 16000 100000 1
-GPU version:
-Time taken = 967.120000
 
-[xm2074@cuda5 lab2]$ ./xm2074 1000 100000 1
-GPU version:
-Time taken = 20.680000
-[xm2074@cuda5 lab2]$ ./xm2074 2000 100000 1
-GPU version:
-Time taken = 80.670000
-[xm2074@cuda5 lab2]$ ./xm2074 4000 100000 1
-GPU version:
-Time taken = 320.530000
-[xm2074@cuda5 lab2]$ ./xm2074 8000 100000 1
-GPU version:
-Time taken = 1280.330000
-[xm2074@cuda5 lab2]$ ./xm2074 16000 100000 1
-GPU version:
-Time taken = 5120.120000
-*/
 /***************** The GPU version: Write your code here *********************/
 /* This function can call one or more kernels if you want ********************/
 void  gpu_heat_dist(float * playground, unsigned int N, unsigned int iterations) {
@@ -254,24 +196,20 @@ void  gpu_heat_dist(float * playground, unsigned int N, unsigned int iterations)
   cudaMemcpy(playground, pgd, N * N * sizeof(float), cudaMemcpyDeviceToHost);
 }
 
-/*
 
-*/
 /***************** The GPU optimized version: Write your code here *********************/
 __global__ void gpu_optimized_kernel(float *playground, unsigned int N) {
-  __shared__ float tile[TILE_SIZE][TILE_SIZE];
+  __shared__ float shared[TILE_SIZE][TILE_SIZE];
 
   int row = blockIdx.x * TILE_SIZE + threadIdx.x;
   int col = blockIdx.y * TILE_SIZE + threadIdx.y;
   for(int i = 0; i < TILE_SIZE; i++) {
     for (int j = 0; j < TILE_SIZE; j++) {
       if (row+i == 0 ||row+i == N-1 || col+j == 0 || col+j == N-1) continue;
-      tile[i][j] = (playground[index(row+i-1, col+j, N)]
+      shared[i][j] = (playground[index(row+i-1, col+j, N)]
                     + playground[index(row+i+1, col+j, N)]
                     + playground[index(row+i, col+j-1, N)]
                     + playground[index(row+i, col+j+1, N)]) / 4.0;
-
-      
     }
   }
   __syncthreads();
@@ -280,13 +218,13 @@ __global__ void gpu_optimized_kernel(float *playground, unsigned int N) {
     for (int j = 0; j < TILE_SIZE; j++) {
       if (row+i == 0 ||row+i == N-1 || col+j == 0 || col+j == N-1) continue;
       
-      playground[index(row+i, col+j, N)] = tile[i][j];
+      playground[index(row+i, col+j, N)] = shared[i][j];
     }
   }
 
 }
 
-/*
+
 /*
 nvcc -o heatdist heatdist.cu
 nvcc -o xm2074 xm2074.cu
@@ -310,11 +248,14 @@ Time taken = 0.430000
 void  gpu_optimized_heat_dist(float * playground, unsigned int N, unsigned int iterations) {
   float *pgd;
 
-cudaMalloc((void **)&pgd, N * N * sizeof(float));
+  cudaMalloc((void **)&pgd, N * N * sizeof(float));
   cudaMemcpy(pgd, playground, N * N * sizeof(float), cudaMemcpyHostToDevice);
   
+  dim3 grid(N / TILE_SIZE, N / TILE_SIZE, 1);
+  dim3 block(TILE_SIZE, TILE_SIZE, 1);
+
   for (int i = 0; i < iterations; i++) {
-    gpu_optimized_kernel<<<BLOCK_NUM, BLOCK_SIZE>>>(playground, N);
+    gpu_optimized_kernel<<<grid, block>>>(pgd, N);
   }
   
   cudaMemcpy(playground, pgd, N * N * sizeof(float), cudaMemcpyHostToDevice);

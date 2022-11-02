@@ -1,8 +1,7 @@
 ## lab2
 
-NYU GPU Lab 2: Write a program to determine the heat distribution in a space using synchronous iteration on a GPU.
-
-
+NYU GPU Lab 2: Write CUDA program to determine the heat distribution in a space using synchronous
+iteration on a GPU.
 ### Usage
 
 ```bash
