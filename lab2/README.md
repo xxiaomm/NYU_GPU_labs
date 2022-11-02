@@ -1,15 +1,7 @@
-## lab1
+## lab2
 
-NYU GPU Lab 1: Implement a vector processor in CUDA.
+NYU GPU Lab 2: Write a program to determine the heat distribution in a space using synchronous iteration on a GPU.
 
-
-### Module load and Build
-
-```bash
-
-nvcc -o vectorprog <cuda file name: xm2074.cu> -lm
-```
-An executable named `vectorprog` will be generated under the project root directory.
 
 ### Usage
 
